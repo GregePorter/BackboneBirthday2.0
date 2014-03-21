@@ -54,12 +54,20 @@
             "click" : "clicked"
         },
         initialize : function () {
-            _.bindAll(this, 'initRender', 'addAll', 'addOne');
+            _.bindAll(this, 'initRender', 'addAll', 'addOne', 'renderMonth');
+            var wrapperNode = document.createElement("section");
+            wrapperNode.setAttribute(this.id);
             this.initRender();
         },
         clicked : function () {
             var selectedMonth = this.collection.where({"name" : birthdayMonth.getMonth()});
             console.log("clicked");     
+            this.initRender();
+            //this.renderMonth();
+            //selectedMonths[0].set({"selected" : false}, {silent : true});
+        },
+        renderMonth : function () {
+            //this.collection.where({"selected" : true})[.set({"selected" : });
             this.initRender();
         },
         initRender: function() {
@@ -71,6 +79,8 @@
             this.collection.each(this.addOne);
         },
         addOne: function(mon) {
+            var renderNode = document.getElementById(this.id);
+            //var monView = new MonthView({model : mon, id: mon.get('year')});
             var monView = new MonthView({model : mon});
             this.$el.append(monView.render().el);
         }
@@ -138,6 +148,8 @@
 
     var months = new Year();
 
+//    var yearView = new YearView({collection : months});
+
     months.add(jan);
     months.add(feb);
     months.add(mar);
@@ -168,10 +180,14 @@
 
 //AppView is the main view for the application
     var AppView = Backbone.View.extend({
+        el: $("#app"),
         template : _.template($('#button-template').html()),
         //The initialize function gets the months from the Year model and renders each of them
         //One way to improve on this would be to make a YearView which would call subviews
     	initialize: function() {
+            var wrapperNode = document.createElement("section");
+            wrapperNode.setAttribute("id", this.id);
+            this.$el.append(wrapperNode);
             this.render();
     	},
         events : {
@@ -187,24 +203,30 @@
         },
         //this sorts the months based on the Collections default comparator (Number) and then re-renders
         byNumber : function (e) {
+            if (e.currentTarget.parentNode.id === this.id.toString()) {
                 console.log("byNumber");
                 this.collection.sortKey = "number";
                 this.collection.sort();
                 this.render();
+            }
         },
         //this sorts the months with a custom sorting function (by Name) and then renders the view based on the resultant list
         byName : function (e) {
+            if (e.currentTarget.parentNode.id === this.id.toString()) {
                 console.log("byName");
                 this.collection.sortKey = "name";
                 this.collection.sort();
+
                 this.render();
+            }
         },
         //render the App's year
         render: function () {
-            this.$el.html(this.template);
-            var yearView = new YearView({collection : this.collection});
+            var renderNode = document.getElementById(this.id);
+            renderNode.innerHTML = this.template();
+            var yearView = new YearView({collection : this.collection, id : "month-" + this.id});
 
-            this.$el.append(yearView.initRender().el);
+            renderNode.appendChild(yearView.initRender().el);
             return this;
         }
     });
@@ -212,10 +234,8 @@
     var apps = [];
     var years = [];
     var i;
-    var baseElement =  $("#app");
     for(i = 0; i < 1000; i++) {
         years[i] = months.clone();
-        apps[i] = new AppView({collection : years[i]});
-        baseElement.append(apps[i].render().el);
+        apps[i] = new AppView({collection : years[i], id : (2000-i)});
     }
 })(jQuery);

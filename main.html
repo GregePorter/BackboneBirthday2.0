@@ -6,10 +6,20 @@
     <link rel="stylesheet" href="lib/birthday.css" />
 </head>
 <body>
+	<section id="app">
+	</section>
 
-    <button id="numButton">Number</button>
-    <button id="nameButton">Name</button>
+	<script type="text/template" id="button-template">
+			<br />
+			<section id=<%= this.id %>>
+				<label><%= this.id %></label>
+				<button id="numButton">Number</button>
+				<button id="nameButton">Name</button>
+			</section>
+	</script>
 
+	<script type="text/template" id="year-template">
+	</script>
     <script src="lib/jquery.js"></script>
     <script src="lib/underscore.js"></script>
     <script src="lib/backbone.js"></script>

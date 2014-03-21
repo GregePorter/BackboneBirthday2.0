@@ -6,7 +6,7 @@
 	    return {
                 name : "",
                 number  : 0,	
-                selected : false,  //trailing comment
+                selected : false,
             }
         },
     });
@@ -14,7 +14,6 @@
 //Month view 
     var MonthView = Backbone.View.extend({
         tagName : "div", 
-        //id : "",
         class : "month",
         events : {
             "click" : "select"
@@ -50,29 +49,64 @@
     var YearView = Backbone.View.extend({
         template : _.template($('#year-template').html()),
         tagName: "months",
+        subViews : [],
         events : {
-            "click" : "clicked"
+            "click" : "clicked",
+            "sort" : "sorting"
         },
         initialize : function () {
-            _.bindAll(this, 'initRender', 'addAll', 'addOne');
+            _.bindAll(this, 'initRender', 'addAll', 'addOne', 'renderMonth');
+            var wrapperNode = document.createElement("section");
+            wrapperNode.setAttribute(this.id);
             this.initRender();
         },
-        clicked : function () {
-            var selectedMonth = this.collection.where({"name" : birthdayMonth.getMonth()});
-            console.log("clicked");     
+        sorting : function () {
+            console.log("sorting");
             this.initRender();
+        },
+        renderMonth : function (monName) {
+            var that = this;
+            debugger;
+            this.collection.each( function(mon, monName) {
+                debugger;
+                that.$el.replace(that.subViews[mon.get('number')]['render']);
+            });
+            return this;
+        },
+        clicked : function () {
+            var i;
+            var selectedMonth = birthdayMonth.getMonth();
+            var oldMonth = birthdayMonth.getPreviousMonth();
+            for (i = 0; i < this.subViews.length; i++) {
+            
+                if (this.subViews[i]['name'] === oldMonth) {
+                    this.subViews[i]['render'] = this.subViews[i]['view'].render().el;
+                    this.renderMonth(this.subViews[i]['name']);
+                }
+
+                if (this.subViews[i]['name'] === selectedMonth) {
+                    this.subViews[i]['render'] = this.subViews[i]['view'].render().el;
+                    this.renderMonth(this.subViews[i]['name']);
+                }
+            }
+            //this.initRender();
+            //search the views array for the view and re-render
         },
         initRender: function() {
             this.$el.html(this.template);
             this.addAll();
+            this.subViews.shift();
             return this;
         },
         addAll: function() {
             this.collection.each(this.addOne);
         },
         addOne: function(mon) {
+            var renderNode = document.getElementById(this.id);
+            //var monView = new MonthView({model : mon, id: mon.get('year')});
             var monView = new MonthView({model : mon});
-            this.$el.append(monView.render().el);
+            this.subViews[mon.get('number')] = {name : mon.get('name'), view : monView, render : monView.render().el};
+            this.$el.append(this.subViews[mon.get('number')]['render']);
         }
     });
 
@@ -138,6 +172,8 @@
 
     var months = new Year();
 
+//    var yearView = new YearView({collection : months});
+
     months.add(jan);
     months.add(feb);
     months.add(mar);
@@ -153,13 +189,17 @@
 
 //birthdayMonth API, the user clicking functionality is linked to the AppView's events instead of having them directly here too
     var birthdayMonth = (function (initMon) {
-        var currentMonth = "";
-	
+        var currentMonth = initMon;
+	    var previousMonth = initMon;
         return {
             getMonth : function () {
                 return this.currentMonth;
             },
+            getPreviousMonth : function () {
+                return this.previousMonth;
+            },
             setMonth : function (name) {
+                this.previousMonth = this.currentMonth;
                 this.currentMonth = name;
                 console.log("User selected " + name + " as the new month");
             }
@@ -168,10 +208,15 @@
 
 //AppView is the main view for the application
     var AppView = Backbone.View.extend({
+        el: $("#app"),
         template : _.template($('#button-template').html()),
         //The initialize function gets the months from the Year model and renders each of them
         //One way to improve on this would be to make a YearView which would call subviews
     	initialize: function() {
+            var wrapperNode = document.createElement("section");
+            //this.$el.append(this.template());
+            wrapperNode.setAttribute("id", this.id);
+            this.$el.append(wrapperNode);
             this.render();
     	},
         events : {
@@ -187,24 +232,33 @@
         },
         //this sorts the months based on the Collections default comparator (Number) and then re-renders
         byNumber : function (e) {
+            if (e.currentTarget.parentNode.id === this.id.toString()) {
                 console.log("byNumber");
                 this.collection.sortKey = "number";
                 this.collection.sort();
                 this.render();
+            }
         },
         //this sorts the months with a custom sorting function (by Name) and then renders the view based on the resultant list
         byName : function (e) {
+            if (e.currentTarget.parentNode.id === this.id.toString()) {
                 console.log("byName");
                 this.collection.sortKey = "name";
                 this.collection.sort();
+                /*var tempCol = this.collection.sortBy( function (mon) {
+                    return mon.get("name").toLowerCase();
+                });*/
+
                 this.render();
+            }
         },
         //render the App's year
         render: function () {
-            this.$el.html(this.template);
-            var yearView = new YearView({collection : this.collection});
+            var renderNode = document.getElementById(this.id);
+            renderNode.innerHTML = this.template();
+            var yearView = new YearView({collection : this.collection, id : "month-" + this.id});
 
-            this.$el.append(yearView.initRender().el);
+            renderNode.appendChild(yearView.initRender().el);
             return this;
         }
     });
@@ -212,10 +266,8 @@
     var apps = [];
     var years = [];
     var i;
-    var baseElement =  $("#app");
-    for(i = 0; i < 1000; i++) {
+    for(i = 0; i < 1; i++) {
         years[i] = months.clone();
-        apps[i] = new AppView({collection : years[i]});
-        baseElement.append(apps[i].render().el);
+        apps[i] = new AppView({collection : years[i], id : (2000-i)});
     }
 })(jQuery);
