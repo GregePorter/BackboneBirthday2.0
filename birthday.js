@@ -6,7 +6,7 @@
 	    return {
                 name : "",
                 number  : 0,	
-                selected : false,  //trailing comment
+                selected : false  //trailing comment
             }
         },
     });
@@ -14,22 +14,18 @@
 //Month view 
     var MonthView = Backbone.View.extend({
         tagName : "div", 
-        //id : "",
         class : "month",
         events : {
             "click" : "select"
         },
 	    select : function(e) {
-            //this.model.set({"selected" : true});
             birthdayMonth.setMonth(this.model.get('name'));
             this.render();
         },
         render: function () {
             if (this.model.get('name') === birthdayMonth.getMonth()) {
-                //this.$el.id(this.model.get('name'));
                 this.$el.html(this.model.get('name')).css({color : "#F13737"});
             } else {
-                //this.$el.id(this.model.get('name'));
                 this.$el.html(this.model.get('name'));
             }
             return this;
@@ -76,81 +72,6 @@
         }
     });
 
-    var jan = new Month({
-        name : "January",
-        number : 1
-    });
-
-    var feb = new Month({
-        name : "February",
-        number : 2
-    });
-
-    var mar = new Month({
-        name : "March",
-        number : 3
-    });
-
-    var apr = new Month({
-        name : "April",
-        number : 4
-    });
-
-    var may = new Month({
-        name : "May",
-        number : 5
-    });
-
-    var jun = new Month({
-        name : "June",
-        number : 6
-    });
-
-    var jul = new Month({
-        name : "July",
-        number : 7
-    });
-
-    var aug = new Month({
-        name : "August",
-        number : 8
-    });
-
-    var sep = new Month({
-        name : "September",
-        number : 9
-    });
-
-    var oct = new Month({
-        name : "October",
-        number : 10
-    });
-
-    var nov = new Month({
-        name : "November",
-        number : 11
-    });
-
-    var dec = new Month({
-        name : "December",
-        number : 12
-    });
-
-    var months = new Year();
-
-    months.add(jan);
-    months.add(feb);
-    months.add(mar);
-    months.add(apr);
-    months.add(may);
-    months.add(jul);
-    months.add(jun);
-    months.add(aug);
-    months.add(sep);
-    months.add(oct);
-    months.add(nov);
-    months.add(dec);
-
 //birthdayMonth API, the user clicking functionality is linked to the AppView's events instead of having them directly here too
     var birthdayMonth = (function (initMon) {
         var currentMonth = "";
@@ -169,11 +90,6 @@
 //AppView is the main view for the application
     var AppView = Backbone.View.extend({
         template : _.template($('#button-template').html()),
-        //The initialize function gets the months from the Year model and renders each of them
-        //One way to improve on this would be to make a YearView which would call subviews
-    	initialize: function() {
-            this.render();
-    	},
         events : {
             "sort" : "sorted"
         },
@@ -209,13 +125,19 @@
         }
     });
 
-    var apps = [];
+    var mon = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var months = new Year();
     var years = [];
-    var i;
+    var yearViews = [];
     var baseElement =  $("#app");
-    for(i = 0; i < 1000; i++) {
+    
+    for (var i = 0; i < 12; i += 1) {
+        months.add( new Month({ "name" : mon[i], "number" : (i+1)}));
+    }
+
+    for (var i = 0; i < 1000; i += 1) {
         years[i] = months.clone();
-        apps[i] = new AppView({collection : years[i]});
-        baseElement.append(apps[i].render().el);
+        yearViews[i] = new AppView({collection : years[i], id : (2014 - i)});
+        baseElement.append(yearViews[i].render().el);
     }
 })(jQuery);
